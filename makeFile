@@ -1,0 +1,14 @@
+CC = gcc
+CFLAGS = -Wall -g
+TARGET = game
+SRCS = GameNew.c
+OBJS = $(SRCS:.c=.o)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+clean:
+	rm -f $(OBJS) $(TARGET)
