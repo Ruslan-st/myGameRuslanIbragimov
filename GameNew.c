@@ -1,36 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Game.h"
 
-typedef struct Room Room;
-typedef struct Player Player;
-typedef struct Creature Creature;
-
-struct Player
-{
-    int health, strength, inventoryCapacity, countOfInventory;
-    char **inventory;
-};
-
-struct Creature
-{
-    char *name;
-    int health, strength;
-};
-
-struct Room
-{
-    char *description;
-    Room *north, *east, *south, *west;
-    Creature *creature;
-    char *item;
-};
-
-Player *initPlayer()
-{
+Player *initPlayer() {
     Player *player = (Player *)malloc(sizeof(Player));
-    if (player == NULL)
-    {
+    if (player == NULL) {
         printf("Error. Cannot allocate memory for the player...\n");
         exit(1);
     }
@@ -43,11 +18,9 @@ Player *initPlayer()
     return player;
 }
 
-Room *initRoom(const char *description, Creature *creature, const char *item)
-{
+Room *initRoom(const char *description, Creature *creature, const char *item) {
     Room *room = (Room *)malloc(sizeof(Room));
-    if (room == NULL)
-    {
+    if (room == NULL) {
         printf("Error. Cannot allocate memory for the room...\n");
         exit(1);
     }
@@ -58,11 +31,9 @@ Room *initRoom(const char *description, Creature *creature, const char *item)
     return room;
 }
 
-Creature *initCreature(const char *name, int health, int strength)
-{
+Creature *initCreature(const char *name, int health, int strength) {
     Creature *creature = (Creature *)malloc(sizeof(Creature));
-    if (creature == NULL)
-    {
+    if (creature == NULL) {
         printf("Error. Cannot allocate memory for the creature...\n");
         exit(1);
     }
@@ -72,150 +43,109 @@ Creature *initCreature(const char *name, int health, int strength)
     return creature;
 }
 
-void freeThePlayer(Player *player)
-{
-    for (int i = 0; i < player->countOfInventory; i++)
-    {
+void freeThePlayer(Player *player) {
+    for (int i = 0; i < player->countOfInventory; i++) {
         free(player->inventory[i]);
     }
     free(player->inventory);
     free(player);
 }
 
-void freeTheRoom(Room *room)
-{
+void freeTheRoom(Room *room) {
     free(room->description);
     free(room->item);
     free(room);
 }
 
-void freeTheCreature(Creature *creature)
-{
+void freeTheCreature(Creature *creature) {
     free(creature->name);
     free(creature);
 }
 
-void takeALook(Room *room)
-{
+void takeALook(Room *room) {
     printf("Description of the room: %s\n", room->description);
-    if (room->creature != NULL)
-    {
+    if (room->creature != NULL) {
         printf("There is a creature in the room: %s.\n", room->creature->name);
-    }
-    else
-    {
+    } else {
         printf("There is no creature in the room.\n");
     }
-    if (room->item != NULL)
-    {
+    if (room->item != NULL) {
         printf("There is an item in the room: %s.\n", room->item);
-    }
-    else
-    {
+    } else {
         printf("There is no item in the room.\n");
     }
 }
 
-void move(Room **currentRoom, const char *directionOfPlayer)
-{
+void move(Room **currentRoom, const char *directionOfPlayer) {
     Room *newRoom = NULL;
-    if (strcmp(directionOfPlayer, "East") == 0)
-    {
+    if (strcmp(directionOfPlayer, "East") == 0) {
         newRoom = (*currentRoom)->east;
-    }
-    else if (strcmp(directionOfPlayer, "North") == 0)
-    {
+    } else if (strcmp(directionOfPlayer, "North") == 0) {
         newRoom = (*currentRoom)->north;
-    }
-    else if (strcmp(directionOfPlayer, "West") == 0)
-    {
+    } else if (strcmp(directionOfPlayer, "West") == 0) {
         newRoom = (*currentRoom)->west;
-    }
-    else if (strcmp(directionOfPlayer, "South") == 0)
-    {
+    } else if (strcmp(directionOfPlayer, "South") == 0) {
         newRoom = (*currentRoom)->south;
     }
-    if (newRoom == NULL)
-    {
+    if (newRoom == NULL) {
         printf("Stop, Cannot move in this direction..\n");
-    }
-    else
-    {
+    } else {
         *currentRoom = newRoom;
         printf("You have moved to a new room.\n");
     }
 }
 
-void pickUpTheItem(Player *player, Room *room)
-{
-    if (room->item != NULL && player->countOfInventory < player->inventoryCapacity)
-    {
+void pickUpTheItem(Player *player, Room *room) {
+    if (room->item != NULL && player->countOfInventory < player->inventoryCapacity) {
         player->inventory[player->countOfInventory++] = strdup(room->item);
         room->item = NULL;
         printf("You have picked up the item.\n");
-    }
-    else if (room->item == NULL)
-    {
+    } else if (room->item == NULL) {
         printf("There is no item.\n");
-    }
-    else
-    {
+    } else {
         printf("Your inventory is full.\n");
     }
 }
 
-void toAttack(Player *player, Room *room)
-{
-    if (room->creature != NULL)
-    {
+void toAttack(Player *player, Room *room) {
+    if (room->creature != NULL) {
         printf("You have attacked the creature! %s!\n", room->creature->name);
         room->creature->health -= player->strength;
-        if (room->creature->health <= 0)
-        {
+        if (room->creature->health <= 0) {
             printf("You have killed the creature %s.\n", room->creature->name);
             freeTheCreature(room->creature);
             room->creature = NULL;
-        }
-        else
-        {
+        } else {
             printf("The health of the creature is: %d\n", room->creature->health);
         }
-    }
-    else
-    {
+    } else {
         printf("There is no creature to attack...\n");
     }
 }
 
-void saveTheGame(Player *player, Room *currentRoom, const char *filepath)
-{
+void saveTheGame(Player *player, Room *currentRoom, const char *filepath) {
     FILE *file = fopen(filepath, "w");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         printf("Cannot open the file...\n");
         return;
     }
     fprintf(file, "%d %d %d %d\n", player->health, player->strength, player->inventoryCapacity, player->countOfInventory);
-    for (int i = 0; i < player->countOfInventory; i++)
-    {
+    for (int i = 0; i < player->countOfInventory; i++) {
         fprintf(file, "%s\n", player->inventory[i]);
     }
     fclose(file);
     printf("The game is saved to the file %s.\n", filepath);
 }
 
-void loadTheGame(Player *player, Room **currentRoom, const char *filepath)
-{
+void loadTheGame(Player *player, Room **currentRoom, const char *filepath) {
     FILE *file = fopen(filepath, "r");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         printf("Cannot load the game...\n");
         return;
     }
 
     fscanf(file, "%d %d %d %d\n", &player->health, &player->strength, &player->inventoryCapacity, &player->countOfInventory);
-    for (int i = 0; i < player->countOfInventory; i++)
-    {
+    for (int i = 0; i < player->countOfInventory; i++) {
         player->inventory[i] = (char *)malloc(50 * sizeof(char));
         fscanf(file, "%s", player->inventory[i]);
     }
@@ -223,8 +153,7 @@ void loadTheGame(Player *player, Room **currentRoom, const char *filepath)
     printf("The game is loaded!\n");
 }
 
-void showMenu()
-{
+void showMenu() {
     printf("Choose an action:\n");
     printf("1. Move: move <direction> (East, North, West, South)\n");
     printf("2. Look around: Look\n");
@@ -236,8 +165,7 @@ void showMenu()
     printf("8. Exit the game: exit\n");
 }
 
-int main()
-{
+int main() {
     Player *player = initPlayer();
     Creature *slenderMan = initCreature("SlenderMan", 50, 10);
     Room *roomA = initRoom("BloodyRoom", slenderMan, "chainsaw");
@@ -250,55 +178,36 @@ int main()
     char commandLine[100];
 
     printf("Welcome to the game. Press any key to continue...\n");
-    getchar(); 
+    getchar();
 
-    showMenu(); 
+    showMenu();
 
-    while (1)
-    {
+    while (1) {
         printf("Enter the command: ");
         fgets(commandLine, sizeof(commandLine), stdin);
         commandLine[strcspn(commandLine, "\n")] = '\0';
 
-        if (strncmp(commandLine, "move ", 5) == 0)
-        {
+        if (strncmp(commandLine, "move ", 5) == 0) {
             move(&currentRoom, commandLine + 5);
-        }
-        else if (strcmp(commandLine, "Look") == 0)
-        {
+        } else if (strcmp(commandLine, "Look") == 0) {
             takeALook(currentRoom);
-        }
-        else if (strcmp(commandLine, "inventory") == 0)
-        {
+        } else if (strcmp(commandLine, "inventory") == 0) {
             printf("Inventory: \n");
-            for (int i = 0; i < player->countOfInventory; i++)
-            {
+            for (int i = 0; i < player->countOfInventory; i++) {
                 printf("- %s\n", player->inventory[i]);
             }
-        }
-        else if (strncmp(commandLine, "pickup ", 7) == 0)
-        {
+        } else if (strncmp(commandLine, "pickup ", 7) == 0) {
             pickUpTheItem(player, currentRoom);
-        }
-        else if (strcmp(commandLine, "attack") == 0)
-        {
+        } else if (strcmp(commandLine, "attack") == 0) {
             toAttack(player, currentRoom);
-        }
-        else if (strncmp(commandLine, "save ", 5) == 0)
-        {
+        } else if (strncmp(commandLine, "save ", 5) == 0) {
             saveTheGame(player, currentRoom, commandLine + 5);
-        }
-        else if (strncmp(commandLine, "load ", 5) == 0)
-        {
+        } else if (strncmp(commandLine, "load ", 5) == 0) {
             loadTheGame(player, &currentRoom, commandLine + 5);
-        }
-        else if (strcmp(commandLine, "exit") == 0)
-        {
+        } else if (strcmp(commandLine, "exit") == 0) {
             break;
-        }
-        else
-        {
-            printf("Unknown command...\n");
+        } else {
+            printf("Invalid command...\n");
         }
     }
 
